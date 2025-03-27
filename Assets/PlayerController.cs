@@ -1,36 +1,111 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class Jogador : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
-    public float moveSpeed = 5f; // Velocidade de movimentação
-    private Rigidbody2D rb2d; // Referência para o Rigidbody2D
-    private Vector2 moveDirection; // Direção do movimento
-    public GameObject geral;
+    [Header("Configurações do Movimento")]
+    public float velocidade = 5f;
+    public float forcaPulo = 10f;
+    public float thresholdNormal = 0.5f; // Define o que é considerado "para cima"
+
+    private Rigidbody2D rb;
+    private BoxCollider2D coll;
+
+    // Armazena os colliders que estão em contato como "chão"
+    private HashSet<Collider2D> collidersNoChao = new HashSet<Collider2D>();
+
+    // Propriedade para verificar se está no chão
+    private bool noChao
+    {
+        get { return collidersNoChao.Count > 0; }
+    }
+
     void Start()
     {
-        rb2d = GetComponent<Rigidbody2D>();
+        rb = GetComponent<Rigidbody2D>();
+        coll = GetComponent<BoxCollider2D>();
     }
 
     void Update()
     {
-        float moveY = Input.GetAxisRaw("Vertical"); // Movimento na horizontal (A/D ou setas)
-        float moveX = Input.GetAxisRaw("Horizontal"); // Movimento na horizontal (A/D ou setas)
-        moveDirection = new Vector2(moveX, moveY);
+        Movimento();
+        Pular();
     }
 
-    // FixedUpdate é chamado de forma mais consistente para física
-    void FixedUpdate()
+    void Movimento()
+{
+    float inputMovimento = Input.GetAxis("Horizontal");
+    rb.velocity = new Vector2(inputMovimento * velocidade, rb.velocity.y);
+
+    // Verifica se o jogador está se movendo para a esquerda ou direita
+    if (inputMovimento < 0) // Para a esquerda
     {
-        // Movimentação no Rigidbody2D
-        Vector2 newPos = rb2d.position + moveDirection * moveSpeed * Time.fixedDeltaTime;
+        // Rotaciona 180 graus no eixo Y
+        transform.rotation = Quaternion.Euler(0, 180, 0);
+    }
+    else if (inputMovimento > 0) // Para a direita
+    {
+        // Restaura a rotação para o valor original
+        transform.rotation = Quaternion.Euler(0, 0, 0);
+    }
+}
 
-        // Limitar a posição dentro dos valores especificados
-        newPos.y = Mathf.Clamp(newPos.y, -3.5f, 3.5f);  // Limitar o movimento na horizontal
-        newPos.x = Mathf.Clamp(newPos.x, -4.5f, 4.5f);  // Limitar o movimento na horizontal
 
-        rb2d.MovePosition(newPos);
+    void Pular()
+    {
+        if (Input.GetButtonDown("Jump") && noChao)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, forcaPulo);
+        }
+    }
+
+    // Detecta o início de uma colisão
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        VerificaContatos(collision);
+    }
+
+    // Atualiza a verificação enquanto a colisão persiste
+    void OnCollisionStay2D(Collision2D collision)
+    {
+        VerificaContatos(collision);
+    }
+
+    // Remove o collider da lista quando a colisão termina
+    void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collidersNoChao.Contains(collision.collider))
+        {
+            collidersNoChao.Remove(collision.collider);
+        }
+    }
+
+    // Método para verificar os contatos e identificar se são "chão"
+    void VerificaContatos(Collision2D collision)
+    {
+        bool contatoChao = false;
+        foreach (ContactPoint2D contato in collision.contacts)
+        {
+            // Se a normal do contato tiver valor Y maior que o limiar,
+            // consideramos que é um contato com o chão.
+            if (contato.normal.y >= thresholdNormal)
+            {
+                contatoChao = true;
+                break;
+            }
+        }
+
+        if (contatoChao)
+        {
+            collidersNoChao.Add(collision.collider);
+        }
+        else
+        {
+            // Se não houver contato "para cima", remove (caso exista)
+            if (collidersNoChao.Contains(collision.collider))
+            {
+                collidersNoChao.Remove(collision.collider);
+            }
+        }
     }
 }
