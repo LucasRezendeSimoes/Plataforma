@@ -5,6 +5,7 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Configurações do Movimento")]
     public float velocidade = 5f;
+    public Animator animator;
     public float forcaPulo = 10f;
     public float thresholdNormal = 0.5f; // Define o que é considerado "para cima"
 
@@ -17,7 +18,9 @@ public class PlayerController : MonoBehaviour
     // Propriedade para verificar se está no chão
     private bool noChao
     {
-        get { return collidersNoChao.Count > 0; }
+        get {
+            animator.SetBool("Pulando", false);
+            return collidersNoChao.Count > 0; }
     }
 
     void Start()
@@ -30,6 +33,7 @@ public class PlayerController : MonoBehaviour
     {
         Movimento();
         Pular();
+        transform.rotation = Quaternion.Euler(0, transform.rotation.eulerAngles.y, 0);
     }
 
     void Movimento()
@@ -42,20 +46,38 @@ public class PlayerController : MonoBehaviour
     {
         // Rotaciona 180 graus no eixo Y
         transform.rotation = Quaternion.Euler(0, 180, 0);
+        animator.SetBool("Movendo", true);
     }
     else if (inputMovimento > 0) // Para a direita
     {
         // Restaura a rotação para o valor original
         transform.rotation = Quaternion.Euler(0, 0, 0);
+        animator.SetBool("Movendo", true);
+    }
+    else
+    {
+        animator.SetBool("Movendo", false);
     }
 }
 
 
     void Pular()
     {
-        if (Input.GetButtonDown("Jump") && noChao)
+        if (noChao)
         {
-            rb.velocity = new Vector2(rb.velocity.x, forcaPulo);
+            
+            if(Input.GetButtonDown("Jump"))
+            {
+                rb.velocity = new Vector2(rb.velocity.x, forcaPulo);
+            }
+            else
+            {
+                animator.SetBool("Pulando", false);
+            }
+        }
+        else
+        {
+            animator.SetBool("Pulando", true);
         }
     }
 

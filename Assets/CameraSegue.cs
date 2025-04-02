@@ -11,6 +11,11 @@ public class CameraFollowX : MonoBehaviour
     // Deslocamento opcional em x, caso deseje um offset
     public float offsetX = 0f;
 
+    void Start()
+    {
+        target = GameObject.Find("player").transform;
+    }
+
     void LateUpdate()
     {
         // Cria uma posição desejada mantendo a posição y e z atuais da câmera,

@@ -16,6 +16,10 @@ public class ParallaxEffect : MonoBehaviour
     {
         if (player != null)
             lastPlayerPosition = player.position;
+        else
+        {
+            player = GameObject.Find("player").transform;
+        }
     }
 
     void LateUpdate()

@@ -12,21 +12,9 @@ public class Coin : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // Verifica se o objeto que colidiu é o jogador (certifique-se de que o jogador tenha a tag "Player")
         if (collision.CompareTag("Player"))
         {
-            // Procura o GameManager no GameObject chamado "display"
-            GameManager gameManager = GameObject.Find("Display").GetComponent<GameManager>();
-            if (gameManager != null)
-            {
-                gameManager.AddScore(valor);
-            }
-            else
-            {
-                Debug.LogWarning("GameManager não encontrado no objeto 'display'!");
-            }
-            
-            // Destroi a moeda coletada
+            GameManager.Instance.AddScore(10);
             Destroy(gameObject);
         }
     }
