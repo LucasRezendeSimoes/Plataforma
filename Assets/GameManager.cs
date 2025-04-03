@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// Seleciona tela 1024x768
+
 public class GameManager : MonoBehaviour
 {
     // Start is called before the first frame update
